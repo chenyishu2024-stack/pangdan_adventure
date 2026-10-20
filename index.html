@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+    body {
+        margin:0;
+        height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+    }
+    .stage{
+         --size: min(50vw, 90vh);
+         --px: calc(var(--size) / 64);
+         position: relative;
+         width: var(--size);
+        }
+
+    img {
+        display:block;
+        image-rendering: pixelated;
+    }
+
+    .cover {
+        width:100%;
+    }
+
+    .btn{
+        position:absolute;
+        width: 45%;
+        aspect-ratio: 1;
+        left:50%;
+        top:78%;
+        transform:translate(-50%, -50%);
+        border:none;
+        padding:0;
+        background: url(btn_start.png) center/ 100% no-repeat;
+        image-rendering: pixelated;
+        cursor:pointer;
+    }
+
+    .btn:active{
+        background: url(btn_start_hover.png) center/ 100% no-repeat;
+    }
+    .hidden {
+        display:none !important;
+    }
+
+    #storybegin{
+        aspect-ratio: 1;
+        background:#1a1a2e;
+        color: white;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        padding:10%;
+        box-sizing:border-box;
+        white-space: pre-line;
+        font-size:2.5vmin;
+        line-height:1.5;
+        cursor:pointer
+    }
+
+    #interaction { 
+        position: relative;
+        aspect-ratio: 1;
+        background: #1a1a2e;
+        cursor: pointer;
+    }
+
+    #bg{
+        position:absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    #bg.reveal{
+        animation: reveal 3s ease-out forwards;
+    }
+
+    @keyframes reveal {
+        from { opacity: 0; filter: blur(8px); }
+        to   { opacity: 1; filter: blur(0); }
+    }
+
+    #centerPic{
+        position: absolute;
+    left: calc(16 * var(--px));
+    top: calc(4 * var(--px));
+    width: calc(32 * var(--px));
+    height: calc(32 * var(--px));
+    image-rendering: pixelated;
+    }
+
+    #centerPic.reveal {
+    animation: reveal 3s ease-out forwards;}
+    
+    #centerPic.used {
+    animation: usePic 1.2s ease-in forwards;}
+
+    @keyframes usePic {
+    0%   { transform: rotate(0) scale(1); }
+    20%  { transform: rotate(-12deg) scale(1.1); }
+    40%  { transform: rotate(12deg) scale(1.1); }
+    60%  { transform: rotate(0) scale(1.1); }
+    100% { transform: scale(1.8); opacity: 0; filter: brightness(3); }}
+
+    .shake {
+    animation: shake 0.5s steps(1, end) 3;}
+
+    @keyframes shake {
+    0%   { transform: translate(0, 0); }
+    25%  { transform: translate(calc(-1 * var(--px)), 0); }
+    50%  { transform: translate(calc(1 * var(--px)), calc(-1 * var(--px))); }
+    75%  { transform: translate(0, calc(1 * var(--px))); }
+    100% { transform: translate(0, 0); }}
+
+
+    #textbox {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        padding: calc(42 * var(--px)) calc(6 * var(--px)) calc(5 * var(--px)) calc(30 * var(--px));
+        background: url(textbox.png) 0 0 / 100% no-repeat;
+        image-rendering: pixelated;
+    }
+
+    #dialogText {
+        margin: 0;
+        color: #2a2a2a;
+        font-size: calc(2.5 * var(--px));
+        line-height: 1.5;
+        white-space: pre-line;
+    }
+
+    #choiceBtn {
+        position: absolute;
+        left: 50%;
+        top: calc(8 * var(--px));
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: calc(4 * var(--px));
+    }
+    .choice {
+        width: calc(32 * var(--px));
+        height: calc(10 * var(--px));
+        border: none;
+        padding: 0;
+        background: url(choice.png) 0 calc(-8 * var(--px)) / calc(32 * var(--px)) no-repeat;
+        image-rendering: pixelated;
+        font: inherit;
+        font-size: calc(2.5 * var(--px));
+        color: #2a2a2a;
+        cursor: pointer;
+    }
+    .choice:active {
+        background-image: url(choice_down.png);
+    }
+    
+    #soundBtn{
+        position: absolute;
+        top: calc(1 * var(--px));
+        right: calc(1 * var(--px));
+        width: calc(8 * var(--px));
+        aspect-ratio: 1;
+        border: none;
+        padding: 0;
+        background: url(sound_off.png) center / 100% no-repeat;
+        image-rendering: pixelated;
+        cursor: pointer;
+    }
+
+    #hero {
+        --frame: calc(32 * var(--px));
+        position: absolute;
+        left: calc(-2 * var(--px));
+        bottom: 0;
+        width: var(--frame);
+        height: var(--frame);
+        background: url(hero.png) 0 0 / 800% 100% no-repeat;
+        image-rendering: pixelated;
+        animation: heroIdle 1.2s steps(1,end) infinite;
+    }
+    
+    #nextBtn,#bgNext {
+        --frame: calc(8 * var(--px));
+        position: absolute;
+        right: calc(3 * var(--px));
+        bottom: calc(1 * var(--px));
+        width: var(--frame);
+        height: var(--frame);
+        background: url(next.png) 0 0 / 800% 100% no-repeat;
+        image-rendering: pixelated;
+        animation: sprite8 0.8s steps(8) infinite;
+    }
+    
+
+   #lockBox {
+    --cell: calc(8 * var(--px));
+    position: absolute;
+    left: calc(16 * var(--px));
+    top: calc(4 * var(--px));
+    width: calc(32 * var(--px));
+    height: calc(32 * var(--px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(2 * var(--px));
+    }
+
+    #dials {
+    display: flex;
+    gap: calc(2 * var(--px));
+    padding: calc(1 * var(--px));
+    background: #3a2a2a;
+    }
+
+    .dial {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    }
+
+    .dialBtn {
+    width: calc(6 * var(--px));
+    height: calc(4 * var(--px));
+    border: none;
+    padding: 0;
+    background: none;
+    font: inherit;
+    font-size: calc(2.5 * var(--px));
+    line-height: 1;
+    color: #fffef0;
+    cursor: pointer;
+    }
+
+    .window {
+    width: calc(6 * var(--px));
+    height: var(--cell);
+    overflow: hidden;
+    background: #fffef0;
+    }
+
+    .strip {
+    --d: 0;
+    transform: translateY(calc(var(--d) * -1 * var(--cell)));
+    transition: transform 0.15s steps(3);
+    }
+
+    .strip div {
+    height: var(--cell);
+    line-height: var(--cell);
+    text-align: center;
+    font-size: calc(5 * var(--px));
+    color: #2a2a2a;
+    }
+
+    @keyframes sprite8 {
+        from { background-position: 0 0; }
+        to   { background-position: calc(-8 * var(--frame)) 0; }
+    }
+
+   @keyframes heroIdle {
+     0%      { background-position: 0 0; }
+     41.667% { background-position: calc(-1 * var(--frame)) 0; }
+     50%     { background-position: calc(-2 * var(--frame)) 0; }
+     58.333% { background-position: calc(-3 * var(--frame)) 0; }
+     66.667% { background-position: calc(-4 * var(--frame)) 0; }
+     75%     { background-position: calc(-5 * var(--frame)) 0; }
+     83.333% { background-position: calc(-6 * var(--frame)) 0; }
+     91.667% { background-position: calc(-7 * var(--frame)) 0; }
+     100%    { background-position: calc(-7 * var(--frame)) 0; }
+    }
+    
+    </style>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>胖蛋的奇妙冒险</title>
+
+</head>
+
+<body>
+    <div class="stage">
+        <div id="homepage">
+            <img class="cover" src="cover.png">
+            <button class="btn" id="startBtn"></button>
+        </div>
+
+    <div class="hidden" id="storybegin">
+        <p id="storytext"></p>
+    </div>
+
+    <div class="hidden" id="interaction">
+        <img id="bg" src="bgpage1.png">
+        <img id="centerPic" class="hidden">
+        <div id="textbox">
+            <p id="dialogText"></p>
+            <div id="nextBtn"></div>
+        </div>
+        <div id="hero"></div>
+        <div id="choiceBtn"></div>
+        <div id="bgNext"class='hidden'>
+        </div>
+
+        <div class="hidden" id="lockBox">
+            <div id="dials"></div>
+            <button id = "lockBtn" class="choice">开锁</button>
+        </div>
+    </div>
+
+    <button id="soundBtn"></button>
+    </div>
+
+    <script>
+
+        // ===== 找元素 =====
+        const homepage = document.getElementById('homepage');
+        const storybegin = document.getElementById('storybegin');
+        const storytext = document.getElementById('storytext');
+        const interaction = document.getElementById('interaction');
+        const dialogText = document.getElementById('dialogText');
+        const bg = document.getElementById('bg');
+        const hero = document.getElementById('hero');  
+        const startBtn = document.getElementById('startBtn');
+        const textbox = document.getElementById('textbox');
+        const choiceBox = document.getElementById('choiceBtn');
+        const bgNext=document.getElementById('bgNext');
+        const centerPic = document.getElementById('centerPic');
+
+        const lockBox = document.getElementById('lockBox');
+        const dials = document.getElementById('dials');
+        const lockBtn = document.getElementById('lockBtn');
+
+        const clicksound = new Audio('click.wav');
+        startBtn.addEventListener('pointerdown', () => {
+            clicksound.currentTime = 0;
+            clicksound.play();
+        });
+
+        // ===== 牌子（状态）=====
+        let timer=null;
+        let line=0;
+        let typing=false;
+        let fulltext='';
+        let textEl = storytext;
+        let revealing = false;
+        let bag = [];
+        let digits = [0,0,0,0];
+        const strips =[];
+        let triesLeft=0;
+
+        // ===== 打字机 =====
+        function lines(){ return [].concat(nowpage.text); }  
+        function textType(text){
+            clearInterval(timer);
+            fulltext=text;
+            typing=true;
+
+            const character = Array.from(text);
+            let i = 0;
+            textEl.textContent = '';
+
+            timer = setInterval(()=>{
+                textEl.textContent+=character[i];
+                i=i+1;
+
+                if(i>=character.length){
+                    finishtyping();
+                }
+            },70);
+        };
+
+        function finishtyping (){
+            clearInterval(timer);
+            textEl.textContent=fulltext;
+            typing=false;
+            if(line === lines().length-1) {
+                showChoice();
+                showLock();
+            }
+        };
+
+
+       //===== 剧情数据 =====
+        const scenes = {
+            start:{
+                text:'很久很久以前,\n有个胖蛋独自生活在世界尽头的角落...\n而你,\n四海为家的冒险者,\n在命运耐人寻味的指引下,\n来到了这个无人问津的地方...\n',
+                next:'page1'
+            },
+            page1:{
+                bg:'bgpage1.png',
+                reveal:true,
+                next:'meet'
+            },
+            meet:{
+                bg:'bgpage1.png',
+                hero:'hero.png',
+                text:['午后的阳光和煦,微风不燥,你路过一片青青草地...',
+                      '在草丛中,你看见一个胖蛋正在阳光下睡觉...'],
+                next:'choice1'
+            },
+            choice1:{
+                bg:'bgpage1.png',
+                hero:'hero.png',
+                text:'你会选择...',
+                choiceBtn:[
+                    {label:'摇醒他',next:'wakepage'},
+                    {label:'看着他睡',next:'unwakepage'}
+                ]
+            },
+            wakepage:{
+                bg:'bg_wakeup.png',//这里之后想把一个眨眼的逐帧动画做bg怎么办？
+                text:'...',
+                next:'page2'
+            },
+            unwakepage:{
+                bg:'bgpage1.png',
+                hero:'hero.png',
+                text:['你惊觉他好像不是睡着,\n而是昏过去了,',
+                      '四下无人...',
+                      '你有点拿不定主意...'],
+                next:'choice3'
+            },
+            page2:{
+                bg:'bg_wakeup.png',
+                hero:'egg.png',//这里之后改成胖蛋立绘
+                text:['他很不爽地醒来了,不解地看着你',
+                      '要解释一下吗...?'],
+                next:'choice2'
+            },
+            choice2:{
+                bg:'bg_wakeup.png',
+                hero:'hero.png',
+                text:'你会选择...',
+                choiceBtn:[
+                    {label:'说担心他会中暑',next:'where'},
+                    {label:'只是盯着他不说话',next:'ending2'}
+                ]
+            },
+            choice3:{
+                bg:'bgpage1.png',
+                hero:'hero.png',
+                text:'该怎么办呢...?',
+                choiceBtn:[
+                    {label:'赶快离开这个鬼地方',next:'ending3'},
+                    {label:'想办法救救这个胖蛋',next:'savetry'}]
+            },
+            savetry:{
+                bg:'bgpage1.png',
+                hero:'hero.png',
+                pic:'bag.png',
+                picReveal:true,
+                text:'你决定翻翻你的背包,\n也许里面还有点能用的东西...',
+                next:'bag_check'
+            },
+            bag_check:{
+                bg:'bgpage1.png',
+                hero:'hero.png',
+                pic:"bag.gif",//这里要改成GIF包打开的动画
+                text:['只剩最后两瓶药水了,',
+                '有一瓶混沌中闪烁着银光的绿色药水...',
+                '还有一瓶被一股无形异能包裹着的清澈透明药水...',
+                '但这些药水都是什么效果来着..?'],//跳出背包打开的动画在中间方块
+                next:'choice_drug'
+            },
+            choice_drug:{
+                bg:'bgpage1.png',
+                hero:'hero.png',
+                text:'选哪瓶呢...?',
+                choiceBtn:[
+                    {label:'神奇绿色药水',next:'effetgreen'},
+                    {label:'清澈透明药水',next:'effetclear'}]
+            },
+            effetgreen:{
+                bg:'bgpage1.png',
+                pic:'green.png',
+                picClick:true,
+                next:'ending4'
+            },
+            effetclear:{
+                bg:'bgpage1.png',
+                pic:'clair.png',
+                picClick:true,
+                next:"ending5"
+            },
+            where:{
+                bg:'bg_wakeup.png',
+                hero:'egg.png',//这里之后改成胖蛋立绘动图
+                text:['胖蛋揉了揉眼睛,',
+                      '说：那不然去哪里睡啊？',],
+                next:'house'
+            },
+            house:{
+                bg:'bg_wakeup.png',
+                hero:'hero.png',
+                pic:'house.png',
+                picReveal:true,
+                text:['你环顾四周,目光锁定了不远处唯一的小屋。'],//这里之后想在窗口正中间插入一个正方形的图，画个小屋，小屋最好也能缓慢出现。
+                next:'choice_check'
+            },
+            choice_check:{
+                bg:'bg_wakeup.png',
+                hero:'hero.png',
+                text:'那么,\n在出发前要不要先搜刮一下胖蛋身上有什么...?',
+                choiceBtn:[
+                    {label:'防人之心不可无,搜!',next:'search'},
+                    {label:'算了吧,睡觉要紧..',next:'nobag'}
+                ]
+            },
+            search:{
+                bg:'nobg.png',//缺背景胖蛋惶恐
+                hero:'hero.png',
+                text:['你毫不留情地将胖蛋从头到脚摸了个遍,',
+                      '最终只在他的贴身口袋里找到了一张脏兮兮的卡片...'
+                ],
+                next:'card_side1'
+            },
+            card_side1:{
+                bg:'nobg.png',//胖蛋惶恐图
+                hero:'hero.png',
+                pic:'card1.png',//缺图
+                text:'卡片正面画着一个拙劣的生日蛋糕,',
+                next:'card_side2'
+            },
+            card_side2:{
+                bg:'nobg.png',
+                hero:'hero.png',
+                pic:'card2.png',
+                text:[
+                    '反面依稀能辨认出落款的日期,',
+                    '但已经看不清人名,\n不知道这张贺卡是谁写的...'
+                ],
+                next:'takecard'
+            },
+            takecard:{
+                bg:'nobg.png',
+                hero:'hero.png',
+                pic:'bag.gif',
+                gain:'模糊的生日贺卡',
+                text:'你将\n【模糊的生日卡片】\n放入背包。',
+                next:'door'
+            },
+            nobag:{
+                bg:'nobg.png',//换成房子背景,最好加个抖动效果并配上脚步声
+                shake:true,
+                sound:'feetsound.mp3',
+                hero:'hero.png',//这里之后改成胖蛋立绘
+                text:'你一股脑地拽着胖蛋冲向那座空屋，',
+                next:'door'
+            },
+             door:{
+                check:{item:'模糊的生日贺卡',yes:'door_card',no:'door_nocard'}
+            },
+            door_card:{
+                bg:'nobg.png',//house bg
+                hero:'hero.png',
+                pic:'house.png',//door pic
+                text:['大门紧锁',
+                      '门把上露出一截密码锁,\n上面画着生日蛋糕...',
+                      '你想起了背包里的生日贺卡...\n上面的数字好像是 0613?'],
+                next:'lock'
+            },
+            door_nocard:{
+                bg:'nobg.png',//house bg
+                hero:'hero.png',
+                pic:'house.png',//door pic
+                text:['大门紧锁',
+                      '门把上露出一截密码锁,\n上面画着生日蛋糕...',
+                      '你脑袋里没有任何线索,胖蛋像哑巴一样保持缄默',
+                      '只能靠自己瞎蒙了...'],
+                next:'lock'
+            },
+            lock:{
+                bg:'nobg.png',
+                hero:'hero.png',
+                text:'应该有一串数字能打开这扇门...',
+                lock:{password:'0613',tries:3,success:"ending1",fail:'ending6'}
+            },
+
+        //结局大全
+            ending1:{
+                text: ['🎉共同的家',
+                        '哇哦,\n你进入了胖蛋废弃的小屋!\n虽然屋内一片狼籍,但好歹你们有了一个遮风避雨的居所!',
+                        '时光流逝，你们在此定居，\n逐渐习惯了彼此的存在,\n在小屋里相依为命了许多年...',
+                        '直到你寿终正寝前的最后一刻，\n你也没能见到除了胖蛋以外的任何人来过这里.',
+                        '而眼前的胖蛋，却依然还是你们初见时的样子，\n没有一丝皱纹和白发.',
+                        '🏡'],
+                next: 'start'
+            },
+            ending2:{
+                text:[
+                    '💢你脑子有病啊？',
+                    '胖蛋觉得你不可理喻,\n恶狠狠地咒骂了你一句,\n然后甩着胖脸头也不回地走远了。',
+                    '从此以后,\n你再也没见到过他。',
+                    '☁️'],
+                next:'start'
+            },
+            ending3:{
+                text:[
+                    '🧊铁石心肠',
+                    '你就这样把可怜的小胖蛋独自抛下了...',
+                    '自你离开后不出一个时辰,\n他就不幸地永久沉睡在了那个无人问津的角落。',
+                    '你是个残忍的家伙,\n从此以后,\n在你看不见的地方,\n胖蛋的冤魂将始终纠缠着你这个冷血的坏蛋。',
+                '😈'
+                ],
+                next:'start'
+             },
+             ending4:{
+                text:[
+                    '🧪救命恩人',
+                    '几滴荧光闪闪的绿色药水流进胖蛋的嘴里时，神奇的事情发生了,',
+                    '只见他突然浑身散发出绿光，\n浑身的毛发都开始瞬间猛长,\n就一眨眼的功夫,他的身体已经经历了一次重生。',
+                    '从噩梦中醒来的胖蛋对你千恩万谢，决定一辈子追随你的步伐。\n从此以后...山高路远，天涯海角，\n你们一起经历了许多冒险...',
+                    '无论何时何地，胖蛋始终和你在一起。',
+                    '🐣'
+                ],
+                next:'start'
+             },
+             ending5:{
+                text:['🩸阴差阳错',
+                    '糟糕！\n 原来这是一瓶来自另一个世界的忘情水。',
+                    '当胖蛋喝下这瓶澄澈的透明液体，\n他周身升起了无数晶莹的雾气...\n他将在另一个世界醒来,却从不知道你的存在，',
+                    '当雾气散去，胖蛋也消失不见...',
+                    '这一切就像一场梦，而你已永远成为了梦中人。',
+                    '🫧'
+                ],
+                next:'start'
+             },
+             ending6:{
+                text:['🚪有勇无谋',
+                      '你这家伙，把门彻底搞坏了。\n 随着一声警报响起,房子轰然倒塌,\n你再也无法知道屋子里有什么了。',
+                      '这下好了,\n你和身后的胖蛋变成了这美丽世界的两个流浪者...',
+                      '🚨'
+                    ],
+                next:'start'
+             }
+        }
+
+        let nowpage = null;
+
+        //===== 显示剧情 ======
+        function showScene(name){
+            if(!scenes[name]){ console.warn('缺场景:', name); return; }//提示缺少的场景
+            
+            nowpage=scenes[name];
+            line=0;
+            choiceBox.innerHTML='';
+            bgNext.classList.add('hidden');
+            lockBox.classList.add('hidden');
+
+            if (name === 'start') {
+                 bag = ['绿色药水', '透明药水'];
+            };
+
+            if (nowpage.gain) {
+                bag.push(nowpage.gain);
+            };
+
+            if(nowpage.check){
+                if(bag.includes(nowpage.check.item)){
+                    showScene(nowpage.check.yes);
+                }else{
+                    showScene(nowpage.check.no);
+                }
+                return;
+            };
+
+            if (nowpage.lock) {
+                triesLeft = nowpage.lock.tries;
+
+                digits=[0,0,0,0];
+                for (const k of [0, 1, 2, 3]) {
+                strips[k].style.setProperty('--d', 0);}
+            }
+
+            if(nowpage.bg){
+                storybegin.classList.add('hidden');
+                interaction.classList.remove('hidden');
+                bg.src=nowpage.bg
+                if(!nowpage.text){
+                    textbox.classList.add('hidden');
+                }else{
+                    textbox.classList.remove('hidden');
+                }
+                if(!nowpage.hero){
+                    hero.classList.add('hidden');
+                }else{
+                    hero.classList.remove('hidden');
+                    hero.style.backgroundImage = 'url('+nowpage.hero+')';
+                }
+                //中间图
+                centerPic.classList.remove('reveal','used');
+                if(nowpage.pic){
+                    centerPic.src=nowpage.pic;
+                    centerPic.classList.remove('hidden');
+                    if(nowpage.picReveal)replay(centerPic,'reveal');
+                }else{
+                    centerPic.classList.add('hidden');
+                }
+
+                //背景抖动
+                bg.classList.remove('shake');
+                if(nowpage.shake) replay(bg,'shake');
+
+                textEl=dialogText;
+
+            }else{
+                interaction.classList.add('hidden');
+                storybegin.classList.remove('hidden');
+                textEl=storytext;
+            }
+
+            //sound
+            if(nowpage.sound) new Audio(nowpage.sound).play();
+            if(nowpage.reveal){Reveal();return;}
+            if(!nowpage.text){
+                if(!nowpage.picClick)bgNext.classList.remove('hidden');
+                return;
+            }
+
+            textType(lines()[line]);
+        }
+
+        //====首图浮现动画=====
+        function replay(el, cls){
+            el.classList.remove(cls);
+            void el.offsetWidth;
+            el.classList.add(cls);
+        }
+
+        function Reveal(){
+            revealing=true;
+            replay(bg,'reveal');
+        }
+
+        bg.addEventListener('animationend',()=>{
+            if(!revealing) return;
+            revealing = false;
+            bg.classList.remove('reveal');
+            bgNext.classList.remove('hidden');   // 清晰后出现箭头，等玩家点
+        });
+
+        //=======显示选项======
+        function showChoice(){
+            if(nowpage.choiceBtn){
+                for (const choice of nowpage.choiceBtn){
+                    const btn = document.createElement('button');
+                    btn.className='choice';
+                    btn.textContent= choice.label;
+                    btn.addEventListener('click',(event)=>{
+                        event.stopPropagation();
+                        showScene(choice.next);
+                    });
+                    choiceBox.appendChild(btn);
+                }
+            }
+        }
+
+        function showLock(){
+            if (nowpage.lock) {
+                lockBox.classList.remove('hidden');
+            }
+        }
+
+        function trylock(){
+            if(digits.join('')===nowpage.lock.password){
+                showScene(nowpage.lock.success);
+            }else{
+                triesLeft=triesLeft-1;
+                if(triesLeft<=0){
+                    showScene(nowpage.lock.fail);
+                }else{
+                    lockBox.classList.add('hidden');
+                    textType('你搞错啦,再试试吧!\n还剩'+triesLeft+'次机会.');
+                }
+            }
+        }
+        lockBtn.addEventListener('click', trylock);
+
+        lockBox.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        //密码锁
+        for (const k of [0,1,2,3]){
+            const dial = document.createElement('div');
+            dial.className='dial';
+
+            const up = document.createElement('button');
+            up.className='dialBtn';
+            up.textContent = '▲';
+
+            const win = document.createElement('div');
+            win.className='window';
+
+            const strip = document.createElement('div');
+            strip.className='strip';
+            for(const n of [0,1,2,3,4,5,6,7,8,9]){
+                const cell = document.createElement('div');
+                cell.textContent = n;
+                strip.appendChild(cell);
+            }
+            win.appendChild(strip);
+
+            const down = document.createElement('button');
+            down.className='dialBtn';
+            down.textContent='▼';
+
+            up.addEventListener('click', () => turn(k, 1));
+            down.addEventListener('click', () => turn(k, -1));
+
+            dial.appendChild(up);
+            dial.appendChild(win);
+            dial.appendChild(down);
+            dials.appendChild(dial);
+            strips.push(strip);
+        };
+        function turn(k, step){
+            digits[k] = (digits[k] + step + 10) % 10;
+            strips[k].style.setProperty('--d', digits[k]);
+            clicksound.cloneNode().play();//音效可能要改
+        };
+        
+        //药水点击
+        
+        centerPic.addEventListener('click',(event)=>{
+            if(!nowpage.picClick)return;
+            event.stopPropagation();
+            centerPic.classList.add('used');
+        });
+        centerPic.addEventListener('animationend',()=>{
+            if(centerPic.classList.contains('used')){
+                showScene(nowpage.next);
+            }
+        });
+
+        //===== 点击效果 =====
+        function Go_on_Click(){
+            if(nowpage.picClick)return;
+            if(revealing===true){
+                bg.getAnimations().forEach(a => a.finish());
+            } else if(typing===true){
+                finishtyping();
+            } else if (line<lines().length-1){
+                line++;
+                textType(lines()[line]);
+            } else if(nowpage.next) {
+                showScene(nowpage.next);
+            }
+        };
+
+        storybegin.addEventListener('click',Go_on_Click);
+        interaction.addEventListener('click',Go_on_Click);
+
+        startBtn.addEventListener('click', ()=> {
+            homepage.classList.add('hidden');
+            showScene('start');
+        });
+     
+    </script>
+
+</body>
+</html>
